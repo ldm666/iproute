@@ -1,43 +1,21 @@
-This is a set of utilities for Linux networking.
+主要使用该工具包下的TC模块
 
-Information:
-    http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+http://www.kernel.org/pub/linux/utils/net/iproute2/
 
-Download:
-    http://www.kernel.org/pub/linux/utils/net/iproute2/
+—————
 
-Repository:
-    git://git.kernel.org/pub/scm/linux/kernel/git/shemminger/iproute2.git
+外层Makefile已进行相应修改，以便于支持debug
 
-How to compile this.
---------------------
-1. libdbm
+1.降低优化等级为-O0
+2.WFLAGS添加-g支持debug
+3.修改subdir，只针对TC进行编译
 
-arpd needs to have the db4 development libraries. For Debian
-users this is the package with a name like libdb4.x-dev.
-DBM_INCLUDE points to the directory with db_185.h which
-is the include file used by arpd to get to the old format Berkeley
-database routines.  Often this is in the db-devel package.
+————
 
-2. make
+关于debug
 
-The makefile will automatically build a Config file which
-contains whether or not ATM is available, etc.
+1.在外层Makefile处执行make（依赖bison和flex），以便于在tc目录下生成可执行文件tc
 
-3. To make documentation, cd to doc/ directory , then
-   look at start of Makefile and set correct values for
-   PAGESIZE=a4		, ie: a4 , letter ...	(string)
-   PAGESPERPAGE=2	, ie: 1 , 2 ...		(numeric)
-   and make there. It assumes, that latex, dvips and psnup
-   are in your path.
+2.vscode，f5启动调试，在launch.json配置program和args
 
-4. This package includes matching sanitized kernel headers because
-   the build environment may not have up to date versions. See Makefile
-   if you have special requirements and need to point at different
-   kernel include files.
-
-Stephen Hemminger
-stephen@networkplumber.org
-
-Alexey Kuznetsov
-kuznet@ms2.inr.ac.ru
+3.添加断点，开始调试
