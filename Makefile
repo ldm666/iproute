@@ -34,14 +34,15 @@ HOSTCC = gcc
 DEFINES += -D_GNU_SOURCE
 # Turn on transparent support for LFS
 DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
-CCOPTS = -O2
+CCOPTS = -O0
 WFLAGS := -Wall -Wstrict-prototypes  -Wmissing-prototypes
-WFLAGS += -Wmissing-declarations -Wold-style-definition -Wformat=2
+WFLAGS += -Wmissing-declarations -Wold-style-definition -Wformat=2 -g
 
 CFLAGS := $(WFLAGS) $(CCOPTS) -I../include $(DEFINES) $(CFLAGS)
 YACCFLAGS = -d -t -v
 
-SUBDIRS=lib ip tc bridge misc netem genl tipc man
+#SUBDIRS=lib ip tc bridge misc netem genl tipc man
+SUBDIRS=lib tc
 
 LIBNETLINK=../lib/libnetlink.a ../lib/libutil.a
 LDLIBS += $(LIBNETLINK)
