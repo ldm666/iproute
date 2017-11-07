@@ -143,7 +143,6 @@ noexist:
 	return q;
 }
 
-
 struct filter_util *get_filter_kind(const char *str)
 {
 	void *dlh;
@@ -326,7 +325,10 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	//根据操作系统，设置tick之类的值
 	tc_core_init();
+
+	//rtnl = rtnetlink,主要用于用户空间和内核空间的通信
 	if (rtnl_open(&rth, 0) < 0) {
 		fprintf(stderr, "Cannot open rtnetlink\n");
 		exit(1);

@@ -46,17 +46,32 @@ static int usage(void)
 
 static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 {
+	//qdisc_util结构体，其内容取每一个qdisc的相应变量、函数
 	struct qdisc_util *q = NULL;
+
+	/*?????????*/
 	struct tc_estimator est;
+
+	//传输size设定
 	struct {
 		struct tc_sizespec	szopts;
 		__u16			*data;
 	} stab;
+
+
+	//存放：网口名称、
 	char  d[16];
+
+	//存放：输入的队列规则
 	char  k[16];
+
+	//tc发送给内核的相应参数
 	struct {
+		//tcmsg、flags等相关信息
 		struct nlmsghdr 	n;
+        //
 		struct tcmsg 		t;
+		//内核用于数据接收的缓冲区
 		char   			buf[TCA_BUF_MAX];
 	} req;
 
@@ -67,6 +82,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 	memset(&k, 0, sizeof(k));
 
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
+	//请求信息，确保相应的文件存在
 	req.n.nlmsg_flags = NLM_F_REQUEST|flags;
 	req.n.nlmsg_type = cmd;
 	req.t.tcm_family = AF_UNSPEC;
@@ -77,7 +93,8 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			if (d[0])
 				duparg("dev", *argv);
 			strncpy(d, *argv, sizeof(d)-1);
-		} else if (strcmp(*argv, "handle") == 0) {
+		} 
+		else if (strcmp(*argv, "handle") == 0) {
 			__u32 handle;
 			if (req.t.tcm_handle)
 				duparg("handle", *argv);
@@ -85,14 +102,17 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			if (get_qdisc_handle(&handle, *argv))
 				invarg("invalid qdisc ID", *argv);
 			req.t.tcm_handle = handle;
-		} else if (strcmp(*argv, "root") == 0) {
+		} 
+		//若是root，则设置reg.t的相应字段
+		else if (strcmp(*argv, "root") == 0) {
 			if (req.t.tcm_parent) {
 				fprintf(stderr, "Error: \"root\" is duplicate parent ID\n");
 				return -1;
 			}
 			req.t.tcm_parent = TC_H_ROOT;
 #ifdef TC_H_INGRESS
-		} else if (strcmp(*argv, "ingress") == 0) {
+		} 
+		else if (strcmp(*argv, "ingress") == 0) {
 			if (req.t.tcm_parent) {
 				fprintf(stderr, "Error: \"ingress\" is a duplicate parent ID\n");
 				return -1;
@@ -105,7 +125,8 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			argc--; argv++;
 			break;
 #endif
-		} else if (strcmp(*argv, "parent") == 0) {
+		} 
+		else if (strcmp(*argv, "parent") == 0) {
 			__u32 handle;
 			NEXT_ARG();
 			if (req.t.tcm_parent)
@@ -113,25 +134,33 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			if (get_tc_classid(&handle, *argv))
 				invarg("invalid parent ID", *argv);
 			req.t.tcm_parent = handle;
-		} else if (matches(*argv, "estimator") == 0) {
+		} 
+		else if (matches(*argv, "estimator") == 0) {
 			if (parse_estimator(&argc, &argv, &est))
 				return -1;
-		} else if (matches(*argv, "stab") == 0) {
+		} 
+		else if (matches(*argv, "stab") == 0) {
 			if (parse_size_table(&argc, &argv, &stab.szopts) < 0)
 				return -1;
 			continue;
-		} else if (matches(*argv, "help") == 0) {
+		} 
+		else if (matches(*argv, "help") == 0) {
 			usage();
-		} else {
+		} 
+		else {
 			strncpy(k, *argv, sizeof(k)-1);
 
+			//ldm分析此处get_qdisc_kind内部相关规则
 			q = get_qdisc_kind(k);
+
 			argc--; argv++;
+			//此处break，跳出while循环
 			break;
 		}
 		argc--; argv++;
 	}
 
+	//ldm继续
 	if (k[0])
 		addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k)+1);
 	if (est.ewma_log)
