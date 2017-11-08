@@ -319,37 +319,38 @@ int rtnl_talk(struct rtnl_handle *rtnl, struct nlmsghdr *n,
 		.iov_base = (void*) n,
 		.iov_len = n->nlmsg_len
 	};
+	//与内核通信的地址结构
 	struct msghdr msg = {
-		.msg_name = &nladdr,
-		.msg_namelen = sizeof(nladdr),
-		.msg_iov = &iov,
-		.msg_iovlen = 1,
+		.msg_name = &nladdr,             /*可选地址*/
+		.msg_namelen = sizeof(nladdr),   /*地址长度*/
+		.msg_iov = &iov,                 /*接收数据的数组*/
+		.msg_iovlen = 1,                 /*msg_iov中元素的数量*/
 	};
 	char   buf[32768];
 
-	memset(&nladdr, 0, sizeof(nladdr));
-	nladdr.nl_family = AF_NETLINK;
+	memset(&nladdr, 0, sizeof(nladdr));      /*初始化地址*/
+	nladdr.nl_family = AF_NETLINK;           /*AF_NETLINK为通信协议*/
 
 	n->nlmsg_seq = seq = ++rtnl->seq;
 
 	if (answer == NULL)
 		n->nlmsg_flags |= NLM_F_ACK;
 
-	status = sendmsg(rtnl->fd, &msg, 0);
+	status = sendmsg(rtnl->fd, &msg, 0);     /*通过套接字fd,用户空间往内核发送已打包好的msg数据，成功则返回发送的字节数*/
 	if (status < 0) {
 		perror("Cannot talk to rtnetlink");
 		return -1;
 	}
 
-	memset(buf,0,sizeof(buf));
+	memset(buf,0,sizeof(buf));               /*初始化buf缓冲区*/
 
 	iov.iov_base = buf;
-	while (1) {
+	while (1) {                              /*注意这里是无限循环*/
 		iov.iov_len = sizeof(buf);
-		status = recvmsg(rtnl->fd, &msg, 0);
-
+		status = recvmsg(rtnl->fd, &msg, 0); /*通过套接字fd,内核向用户空间发送数据，成功则返回发送的字节数，并销毁已经复制完毕的数据*/
+                /*观察debug，这条语句执行之后，buf和msg里面都存放了tbf的字段，说明内核识别了用户空间的命令，双方本次通信成功*/
 		if (status < 0) {
-			if (errno == EINTR || errno == EAGAIN)
+			if (errno == EINTR || errno == EAGAIN)  /*设置错误信号并输出到标准错误输出端*/
 				continue;
 			fprintf(stderr, "netlink receive error %s (%d)\n",
 				strerror(errno), errno);

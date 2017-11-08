@@ -160,7 +160,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		argc--; argv++;
 	}
 
-	//ldm继续
+	//对rtattr结构体填充参数（type，len等）
 	if (k[0])
 		addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k)+1);
 	if (est.ewma_log)
@@ -168,6 +168,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 
 	if (q) {
 		if (q->parse_qopt) {
+			//进入q_tbf.c进行操作，循环解析tbf后面的参数，并填充rtatr参数
 			if (q->parse_qopt(q, argc, argv, &req.n))
 				return 1;
 		} else if (argc) {
@@ -183,7 +184,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			return -1;
 		}
 	}
-
+        //如果语句中没有设置stab参数，则不会进入此判断语句
 	if (check_size_table_opts(&stab.szopts)) {
 		struct rtattr *tail;
 
@@ -203,19 +204,20 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		if (stab.data)
 			free(stab.data);
 	}
-
+        //网口号
 	if (d[0])  {
 		int idx;
-
+                //尝试发送dump信息给内核
 		ll_init_map(&rth);
-
+                //如果没找到网口信息，报错
 		if ((idx = ll_name_to_index(d)) == 0) {
 			fprintf(stderr, "Cannot find device \"%s\"\n", d);
 			return 1;
 		}
+		//将网口名填入req结构体
 		req.t.tcm_ifindex = idx;
 	}
-
+        //上述过程已将req结构体填充好，准备进行与内核的通信
 	if (rtnl_talk(&rth, &req.n, NULL, 0) < 0)
 		return 2;
 
