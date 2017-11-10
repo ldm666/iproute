@@ -364,19 +364,20 @@ int rtnl_talk(struct rtnl_handle *rtnl, struct nlmsghdr *n,
 			fprintf(stderr, "sender address length == %d\n", msg.msg_namelen);
 			exit(1);
 		}
-		for (h = (struct nlmsghdr*)buf; status >= sizeof(*h); ) {
+		
+		for (h = (struct nlmsghdr*)buf; status >= sizeof(*h); ) {//观察debug,此时h->nlmsg_type=2(错误)，导致进入390行语句，退出循环（实际上是没有sudo）。说明内核返回的信息在这条语句之前就返回了
 			int len = h->nlmsg_len;
 			int l = len - sizeof(*h);
 
 			if (l < 0 || len>status) {
 				if (msg.msg_flags & MSG_TRUNC) {
-					fprintf(stderr, "Truncated message\n");
+					fprintf(stderr, "Truncated message\n");//截断信息
 					return -1;
 				}
-				fprintf(stderr, "!!!malformed message: len=%d\n", len);
+				fprintf(stderr, "!!!malformed message: len=%d\n", len);//畸形信息
 				exit(1);
 			}
-
+                        //校验信息
 			if (nladdr.nl_pid != 0 ||
 			    h->nlmsg_pid != rtnl->local.nl_pid ||
 			    h->nlmsg_seq != seq) {
@@ -385,7 +386,7 @@ int rtnl_talk(struct rtnl_handle *rtnl, struct nlmsghdr *n,
 				h = (struct nlmsghdr*)((char*)h + NLMSG_ALIGN(len));
 				continue;
 			}
-
+                        
 			if (h->nlmsg_type == NLMSG_ERROR) {
 				struct nlmsgerr *err = (struct nlmsgerr*)NLMSG_DATA(h);
 				if (l < sizeof(struct nlmsgerr)) {
