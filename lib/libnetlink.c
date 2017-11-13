@@ -52,7 +52,7 @@ int rtnl_open_byproto(struct rtnl_handle *rth, unsigned subscriptions,
 	memset(rth, 0, sizeof(*rth));
 
 	rth->proto = protocol;
-	rth->fd = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, protocol);
+	rth->fd = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, protocol);//设置socket域(地址族)为AF_NETLINK,socket的类型是SOCK_RAW
 	if (rth->fd < 0) {
 		perror("Cannot open netlink socket");
 		return -1;
@@ -72,7 +72,7 @@ int rtnl_open_byproto(struct rtnl_handle *rth, unsigned subscriptions,
 	rth->local.nl_family = AF_NETLINK;
 	rth->local.nl_groups = subscriptions;
 
-	if (bind(rth->fd, (struct sockaddr*)&rth->local, sizeof(rth->local)) < 0) {
+	if (bind(rth->fd, (struct sockaddr*)&rth->local, sizeof(rth->local)) < 0) { //将socket与本地通信地址绑定
 		perror("Cannot bind netlink socket");
 		return -1;
 	}
@@ -95,7 +95,7 @@ int rtnl_open_byproto(struct rtnl_handle *rth, unsigned subscriptions,
 
 int rtnl_open(struct rtnl_handle *rth, unsigned subscriptions)
 {
-	return rtnl_open_byproto(rth, subscriptions, NETLINK_ROUTE);
+	return rtnl_open_byproto(rth, subscriptions, NETLINK_ROUTE);//NETLINK_ROOTE是NETLINK协议族其中之一，是用户空间路由信息交流渠道，内核空间通过本Netlink协议类型对内核空间的路由表进行更新
 }
 
 int rtnl_wilddump_request(struct rtnl_handle *rth, int family, int type)
