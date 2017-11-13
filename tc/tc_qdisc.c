@@ -67,7 +67,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 
 	//tc发送给内核的相应参数
 	struct {
-		//tcmsg、flags等相关信息
+		//存放netlink消息头。linux内核的netlink部分总是认为在每个netlink消息体中已经包含了下面的消息头，所以每个应用程序在发送netlink消息之前需要提供这个头信息
 		struct nlmsghdr 	n;
         //
 		struct tcmsg 		t;
@@ -207,7 +207,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
         //网口号
 	if (d[0])  {
 		int idx;
-                //尝试发送dump信息给内核
+                //初始化netlink
 		ll_init_map(&rth);
                 //如果没找到网口信息，报错
 		if ((idx = ll_name_to_index(d)) == 0) {
