@@ -104,30 +104,33 @@ struct qdisc_util *get_qdisc_kind(const char *str)
 	char buf[256];
 	struct qdisc_util *q;
 
+	//qdisc_list是一个链表，初始化时为0，需要进行随后的操作
+	//若在qdisc_list中找到相应的规则，则return直接返回
 	for (q = qdisc_list; q; q = q->next)
 		if (strcmp(q->id, str) == 0)
 			return q;
 
-	//类似于正则表达式，拿到相应规则的.so文件
+	//例：buf:/usr/lib/tc/q_tbf.so
 	snprintf(buf, sizeof(buf), "%s/q_%s.so", get_tc_lib(), str);
 	dlh = dlopen(buf, RTLD_LAZY);
 	if (!dlh) {
 		/* look in current binary, only open once */
-		//单步调试顺序？dlopen之后，再给BODY和dlh赋值的？
 		dlh = BODY;
 		if (dlh == NULL) {
+			//dlopen(NULL,***)？
 			dlh = BODY = dlopen(NULL, RTLD_LAZY);
 			if (dlh == NULL)
 				goto noexist;
 		}
 	}
 
-	//20171116
+	//tbf_qdisc_util，每一个队列规则都在定义了一个***_qdisc_util结构体
 	snprintf(buf, sizeof(buf), "%s_qdisc_util", str);
 	q = dlsym(dlh, buf);
 	if (q == NULL)
 		goto noexist;
 
+	//qdisc_list是一个单链表，每个q放在链表的最前面
 reg:
 	q->next = qdisc_list;
 	qdisc_list = q;

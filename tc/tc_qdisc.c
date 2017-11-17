@@ -156,19 +156,21 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		}
 		//具体的队列规则，会进入此处
 		else {
+			//k[]存放队列规则的名字
 			strncpy(k, *argv, sizeof(k)-1);
 
-			//ldm分析此处get_qdisc_kind内部相关规则
+			//拿到队列规则的id、函数指针等
 			q = get_qdisc_kind(k);
 
 			argc--; argv++;
-			//此处break，跳出while循环
+			//找到队列规则后，就跳出循环，在循环体外对队列规则相关的参数进行处理
 			break;
 		}
 		argc--; argv++;
 	}
 
-	//对rtattr结构体填充参数（type，len等）
+	//无用注释：对rtattr结构体填充参数（type，len等）
+	//用nlmsghdr、req、队列规则名等，填充rta
 	if (k[0])
 		addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k)+1);
 	if (est.ewma_log)
@@ -192,8 +194,9 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			return -1;
 		}
 	}
-        //如果语句中没有设置stab参数，则不会进入此判断语句
-	if (check_size_table_opts(&stab.szopts)) {
+
+	//如果语句中没有设置stab参数，则不会进入此判断语句
+        if (check_size_table_opts(&stab.szopts)) {
 		struct rtattr *tail;
 
 		if (tc_calc_size_table(&stab.szopts, &stab.data) < 0) {
@@ -212,7 +215,8 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		if (stab.data)
 			free(stab.data);
 	}
-        //网口号
+	
+	//网口号
 	if (d[0])  {
 		int idx;
                 //初始化netlink
@@ -225,7 +229,8 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		//将网口名填入req结构体
 		req.t.tcm_ifindex = idx;
 	}
-        //上述过程已将req结构体填充好，准备进行与内核的通信
+	
+	//上述过程已将req结构体填充好，准备进行与内核的通信
 	if (rtnl_talk(&rth, &req.n, NULL, 0) < 0)
 		return 2;
 
