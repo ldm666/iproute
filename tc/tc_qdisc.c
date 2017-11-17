@@ -81,9 +81,9 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 	memset(&k, 0, sizeof(k));
 
 	//nlmsg长度 = tcmsg长度 + nlmsghdr长度
-	//       --------------------
-	//nlmsg =| nlmsghdr | tcmsg |
-	//       --------------------
+	//        --------------------
+	//nlmsg = | nlmsghdr | tcmsg |
+	//        --------------------
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
 
 	//设置nlmsghdr，为传输指令
@@ -169,8 +169,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		argc--; argv++;
 	}
 
-	//无用注释：对rtattr结构体填充参数（type，len等）
-	//用nlmsghdr、req、队列规则名等，填充rta
+	//用nlmsghdr、req、队列规则名等，填充rta。rta是netlink消息在初始头后的一些可选属性。
 	if (k[0])
 		addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k)+1);
 	if (est.ewma_log)
@@ -178,7 +177,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 
 	if (q) {
 		if (q->parse_qopt) {
-			//进入q_tbf.c进行操作，循环解析tbf后面的参数，并填充rtatr参数
+			//进入队列规则，如q_tbf.c进行操作，循环解析队列规则后面的参数，并填充rtatr参数
 			if (q->parse_qopt(q, argc, argv, &req.n))
 				return 1;
 		} else if (argc) {

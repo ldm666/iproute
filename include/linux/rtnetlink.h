@@ -161,15 +161,22 @@ struct rtattr {
 /* Macros to handle rtattributes */
 
 #define RTA_ALIGNTO	4
+//用于得到不小于len且字节对齐的最小数值
 #define RTA_ALIGN(len) ( ((len)+RTA_ALIGNTO-1) & ~(RTA_ALIGNTO-1) )
+//判断rta > len
 #define RTA_OK(rta,len) ((len) >= (int)sizeof(struct rtattr) && \
 			 (rta)->rta_len >= sizeof(struct rtattr) && \
 			 (rta)->rta_len <= (len))
+//用于得到下一个消息的首地址，同时len变为剩余消息的长度			  
 #define RTA_NEXT(rta,attrlen)	((attrlen) -= RTA_ALIGN((rta)->rta_len), \
 				 (struct rtattr*)(((char*)(rta)) + RTA_ALIGN((rta)->rta_len)))
+//消息体+消息头				  
 #define RTA_LENGTH(len)	(RTA_ALIGN(sizeof(struct rtattr)) + (len))
+//返回不小于NLMSG_LENGTH(len)且字节对齐的最小数值
 #define RTA_SPACE(len)	RTA_ALIGN(RTA_LENGTH(len))
+//用于取得消息的数据部分的首地址
 #define RTA_DATA(rta)   ((void*)(((char*)(rta)) + RTA_LENGTH(0)))
+//返回PAYLOAD长度
 #define RTA_PAYLOAD(rta) ((int)((rta)->rta_len) - RTA_LENGTH(0))
 
 

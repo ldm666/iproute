@@ -637,16 +637,21 @@ int addattrstrz(struct nlmsghdr *n, int maxlen, int type, const char *str)
 int addattr_l(struct nlmsghdr *n, int maxlen, int type, const void *data,
 	      int alen)
 {
+	//RTA_LENGTH 约 qdics名称 + rtattr结构体长度
 	int len = RTA_LENGTH(alen);
+	//rtattr是netlink消息在初始头后的一些可选属性？
 	struct rtattr *rta;
 
 	if (NLMSG_ALIGN(n->nlmsg_len) + RTA_ALIGN(len) > maxlen) {
 		fprintf(stderr, "addattr_l ERROR: message exceeded bound of %d\n",maxlen);
 		return -1;
 	}
+	
 	rta = NLMSG_TAIL(n);
+	//type = TCA_KIND
 	rta->rta_type = type;
 	rta->rta_len = len;
+	//rta的DATA部分存放“tbf\0”
 	memcpy(RTA_DATA(rta), data, alen);
 	n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_ALIGN(len);
 	return 0;
