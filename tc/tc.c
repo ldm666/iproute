@@ -108,10 +108,12 @@ struct qdisc_util *get_qdisc_kind(const char *str)
 		if (strcmp(q->id, str) == 0)
 			return q;
 
+	//类似于正则表达式，拿到相应规则的.so文件
 	snprintf(buf, sizeof(buf), "%s/q_%s.so", get_tc_lib(), str);
 	dlh = dlopen(buf, RTLD_LAZY);
 	if (!dlh) {
 		/* look in current binary, only open once */
+		//单步调试顺序？dlopen之后，再给BODY和dlh赋值的？
 		dlh = BODY;
 		if (dlh == NULL) {
 			dlh = BODY = dlopen(NULL, RTLD_LAZY);
@@ -120,6 +122,7 @@ struct qdisc_util *get_qdisc_kind(const char *str)
 		}
 	}
 
+	//20171116
 	snprintf(buf, sizeof(buf), "%s_qdisc_util", str);
 	q = dlsym(dlh, buf);
 	if (q == NULL)

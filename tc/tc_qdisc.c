@@ -46,18 +46,17 @@ static int usage(void)
 
 static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 {
-	//qdisc_util结构体，其内容取每一个qdisc的相应变量、函数
+	//qdisc_util结构体，其内容取每一个qdisc(如q_tbf)的相应变量、函数
 	struct qdisc_util *q = NULL;
 
 	/*?????????*/
 	struct tc_estimator est;
 
-	//传输size设定
+	//tc传输size指标
 	struct {
 		struct tc_sizespec	szopts;
 		__u16			*data;
 	} stab;
-
 
 	//存放：网口名称、
 	char  d[16];
@@ -69,7 +68,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 	struct {
 		//存放netlink消息头。linux内核的netlink部分总是认为在每个netlink消息体中已经包含了下面的消息头，所以每个应用程序在发送netlink消息之前需要提供这个头信息
 		struct nlmsghdr 	n;
-        //
+        //traffic control message
 		struct tcmsg 		t;
 		//内核用于数据接收的缓冲区
 		char   			buf[TCA_BUF_MAX];
@@ -81,13 +80,21 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 	memset(&d, 0, sizeof(d));
 	memset(&k, 0, sizeof(k));
 
+	//nlmsg长度 = tcmsg长度 + nlmsghdr长度
+	//       --------------------
+	//nlmsg =| nlmsghdr | tcmsg |
+	//       --------------------
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
-	//请求信息，确保相应的文件存在
+
+	//设置nlmsghdr，为传输指令
 	req.n.nlmsg_flags = NLM_F_REQUEST|flags;
 	req.n.nlmsg_type = cmd;
+	//？？？
 	req.t.tcm_family = AF_UNSPEC;
 
+	//重点区域，遍历后续参数
 	while (argc > 0) {
+		//如果是dev，则把dev后的参数存入d[]中，已备后续使用
 		if (strcmp(*argv, "dev") == 0) {
 			NEXT_ARG();
 			if (d[0])
@@ -103,7 +110,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 				invarg("invalid qdisc ID", *argv);
 			req.t.tcm_handle = handle;
 		} 
-		//若是root，则设置reg.t的相应字段
+		//如果是root，则设置reg.t的相应字段
 		else if (strcmp(*argv, "root") == 0) {
 			if (req.t.tcm_parent) {
 				fprintf(stderr, "Error: \"root\" is duplicate parent ID\n");
@@ -111,7 +118,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 			}
 			req.t.tcm_parent = TC_H_ROOT;
 #ifdef TC_H_INGRESS
-		} 
+		}
 		else if (strcmp(*argv, "ingress") == 0) {
 			if (req.t.tcm_parent) {
 				fprintf(stderr, "Error: \"ingress\" is a duplicate parent ID\n");
@@ -146,7 +153,8 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 		} 
 		else if (matches(*argv, "help") == 0) {
 			usage();
-		} 
+		}
+		//具体的队列规则，会进入此处
 		else {
 			strncpy(k, *argv, sizeof(k)-1);
 

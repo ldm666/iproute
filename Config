@@ -1,0 +1,6 @@
+# Generated config based on /usr/include
+PKG_CONFIG:=pkg-config
+AR:=ar
+CC:=gcc
+TC_CONFIG_IPSET:=y
+IP_CONFIG_SETNS:=y
