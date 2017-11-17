@@ -42,6 +42,7 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 	struct tc_tbf_qopt opt;
 	__u32 rtab[256];
 	__u32 ptab[256];
+	//在后续函数中，存放相应的值
 	unsigned buffer=0, mtu=0, mpu=0, latency=0;
 	int Rcell_log=-1, Pcell_log = -1;
 	unsigned short overhead=0;
@@ -67,7 +68,9 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 				return -1;
 			}
 			ok++;
-		} else if (matches(*argv, "latency") == 0) {
+		} 
+		//latency复制给latency
+		else if (matches(*argv, "latency") == 0) {
 			NEXT_ARG();
 			if (latency) {
 				fprintf(stderr, "tbf: duplicate \"latency\" specification\n");
@@ -102,7 +105,7 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 			NEXT_ARG();
 			if (mtu) {
 				fprintf(stderr, "tbf: duplicate \"mtu/minburst\" specification\n");
-				return -1;
+				return -1;2915
 			}
 			if (get_size_and_cell(&mtu, &Pcell_log, *argv) < 0) {
 				explain1(parm_name, *argv);
@@ -120,7 +123,9 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 				return -1;
 			}
 			ok++;
-		} else if (strcmp(*argv, "rate") == 0) {
+		} 
+		//展开单位，转为字节，赋值给rate64
+		else if (strcmp(*argv, "rate") == 0) {
 			NEXT_ARG();
 			if (rate64) {
 				fprintf(stderr, "tbf: duplicate \"rate\" specification\n");
@@ -173,6 +178,7 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
          * one go rather than reveal one more problem when a
          * previous one has been fixed.
          */
+	//对赋值之后的变量进行检查
 	if (rate64 == 0) {
 		fprintf(stderr, "tbf: the \"rate\" parameter is mandatory.\n");
 		verdict = -1;
@@ -198,6 +204,7 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
                 return verdict;
         }
 
+	//对opt进行一系列的赋值
 	opt.rate.rate = (rate64 >= (1ULL << 32)) ? ~0U : rate64;
 	opt.peakrate.rate = (prate64 >= (1ULL << 32)) ? ~0U : prate64;
 
@@ -229,10 +236,12 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 		opt.mtu = tc_calc_xmittime(opt.peakrate.rate, mtu);
 	}
 
+	//把相应的opt数据写入rtattr，通过netlink发送给内核。
 	tail = NLMSG_TAIL(n);
 	addattr_l(n, 1024, TCA_OPTIONS, NULL, 0);
 	addattr_l(n, 2024, TCA_TBF_PARMS, &opt, sizeof(opt));
 	addattr_l(n, 2124, TCA_TBF_BURST, &buffer, sizeof(buffer));
+
 	if (rate64 >= (1ULL << 32))
 		addattr_l(n, 2124, TCA_TBF_RATE64, &rate64, sizeof(rate64));
 	addattr_l(n, 3024, TCA_TBF_RTAB, rtab, 1024);
@@ -242,6 +251,7 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 		addattr_l(n, 3224, TCA_TBF_PBURST, &mtu, sizeof(mtu));
 		addattr_l(n, 4096, TCA_TBF_PTAB, ptab, 1024);
 	}
+	
 	tail->rta_len = (void *) NLMSG_TAIL(n) - (void *) tail;
 	return 0;
 }

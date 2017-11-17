@@ -229,6 +229,7 @@ int get_rate64(__u64 *rate, const char *str)
 	if (p == str)
 		return -1;
 
+	//匹配单位，并根据单位设置相应的值
 	for (s = suffixes; s->name; ++s) {
 		if (strcasecmp(s->name, p) == 0) {
 			bps *= s->scale;

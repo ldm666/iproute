@@ -177,7 +177,7 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 
 	if (q) {
 		if (q->parse_qopt) {
-			//进入队列规则，如q_tbf.c进行操作，循环解析队列规则后面的参数，并填充rtatr参数
+			//进入队列规则，如q_tbf.c进行操作，循环解析队列规则后面的参数，并填充rtattr参数
 			if (q->parse_qopt(q, argc, argv, &req.n))
 				return 1;
 		} else if (argc) {
@@ -218,9 +218,9 @@ static int tc_qdisc_modify(int cmd, unsigned flags, int argc, char **argv)
 	//网口号
 	if (d[0])  {
 		int idx;
-                //初始化netlink
+        //初始化netlink
 		ll_init_map(&rth);
-                //如果没找到网口信息，报错
+        //如果没找到网口信息，报错
 		if ((idx = ll_name_to_index(d)) == 0) {
 			fprintf(stderr, "Cannot find device \"%s\"\n", d);
 			return 1;
