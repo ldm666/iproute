@@ -205,6 +205,8 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
         }
 
 	//对opt进行一系列的赋值
+	//(表达式)? x : y ;首先计算表达式的值，若为ture，则返回x；否则返回y.这里返回rate64
+	//ULL=unsigned long long;  1ULL<<32 表示1的二进制向左移32位
 	opt.rate.rate = (rate64 >= (1ULL << 32)) ? ~0U : rate64;
 	opt.peakrate.rate = (prate64 >= (1ULL << 32)) ? ~0U : prate64;
 
@@ -237,10 +239,13 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 	}
 
 	//把相应的opt数据写入rtattr，通过netlink发送给内核。
+	//计算向req.n.buf填充数据前buf的空闲空间的首地址,此时tail=n的地址+44(nlmsg_len)
 	tail = NLMSG_TAIL(n);
 	addattr_l(n, 1024, TCA_OPTIONS, NULL, 0);
 	addattr_l(n, 2024, TCA_TBF_PARMS, &opt, sizeof(opt));
 	addattr_l(n, 2124, TCA_TBF_BURST, &buffer, sizeof(buffer));
+	//此时buf里面的消息组织形式为struct rtattr XXX +  data; ...+ struct rtattr XXX+data;
+	//data内容分别为NULL,*opt,*buffer
 
 	if (rate64 >= (1ULL << 32))
 		addattr_l(n, 2124, TCA_TBF_RATE64, &rate64, sizeof(rate64));
@@ -252,7 +257,7 @@ static int tbf_parse_opt(struct qdisc_util *qu, int argc, char **argv, struct nl
 		addattr_l(n, 4096, TCA_TBF_PTAB, ptab, 1024);
 	}
 	
-	tail->rta_len = (void *) NLMSG_TAIL(n) - (void *) tail;
+	tail->rta_len = (void *) NLMSG_TAIL(n) - (void *) tail;//本次填入req.n.buf消息所占地址的长度
 	return 0;
 }
 
