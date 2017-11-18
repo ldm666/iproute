@@ -637,9 +637,9 @@ int addattrstrz(struct nlmsghdr *n, int maxlen, int type, const char *str)
 int addattr_l(struct nlmsghdr *n, int maxlen, int type, const void *data,
 	      int alen)
 {
-	//RTA_LENGTH 约 qdics名称 + rtattr结构体长度
+	//len=rtattr结构体长度+alen
 	int len = RTA_LENGTH(alen);
-	//rtattr是netlink消息在初始头后的一些可选属性？
+	//rtattr实际是用来存储每次添加到req.n.buf里面的内容的类型和属性
 	struct rtattr *rta;
 
 	if (NLMSG_ALIGN(n->nlmsg_len) + RTA_ALIGN(len) > maxlen) {
@@ -647,14 +647,15 @@ int addattr_l(struct nlmsghdr *n, int maxlen, int type, const void *data,
 		return -1;
 	}
 	
-	rta = NLMSG_TAIL(n);
+	rta = NLMSG_TAIL(n);//这时候rta指向req.n的buf，并把buf的其中一部分地址存储类型转换为rtattr(原来的类型是char)
 	//type = TCA_KIND
 	rta->rta_type = type;
 	rta->rta_len = len;
-	//rta的DATA部分存放“tbf\0”
+	//在req.n.buf的rta结构体地址的后面写入前面传进来的data数据
 	memcpy(RTA_DATA(rta), data, alen);
-	n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_ALIGN(len);
+	n->nlmsg_len = NLMSG_ALIGN(n->nlmsg_len) + RTA_ALIGN(len);//重新计算消息总长度，这是为了下一次再进入addatrr_1函数的rta=NLMSG_TAIL(n)时能定位到buf的空闲空间的首地址
 	return 0;
+	//这时候req.n.buf新增内容为rtattr结构体+data
 }
 
 int addraw_l(struct nlmsghdr *n, int maxlen, const void *data, int len)
